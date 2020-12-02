@@ -13,6 +13,7 @@ from flops import *
 
 # Training settings
 parser = argparse.ArgumentParser(description='PyTorch Slimming CIFAR training')
+parser.add_argument('--gpu', type=str, default='0')
 parser.add_argument('--data_path', type=str, default='../../datasets/data.cifar10')
 parser.add_argument('--num_classes', type=int, default=10)
 parser.add_argument('--batch-size', type=int, default=64, metavar='N',
@@ -50,6 +51,7 @@ os.environ['CUDA_VISIBLE_DEVICES'] = '0'
 '''
 ####
 
+os.environ['CUDA_VISIBLE_DEVICES'] = args.gpu 
 args.arch = 'ResNet56'
 
 
@@ -92,19 +94,20 @@ def test():
 ##############pruning filter in filter without finetuning#################
 if args.sr and args.threshold:
     dummy_input = torch.randn((1, 3, 32, 32)).cuda()
-    import pdb; pdb.set_trace()
-    torch.onnx.export(model, dummy_input, os.path.join(args.save, 'dense.onnx'))
     model.load_state_dict(torch.load(os.path.join(args.save, 'best.pth.tar')))
+    '''
+    torch.onnx.export(model, dummy_input, os.path.join(args.save, 'dense.onnx'))
     print('**** dense stats ****')
-    test()
+    #test()
     print_model_param_nums(model)
     count_model_param_flops(model)
+    '''
     model.prune(args.threshold)
-    #torch.onnx.export(model, dummy_input, os.path.join(args.save, 'sparse.onnx'))
+    #print(model)
+    torch.onnx.export(model, dummy_input, os.path.join(args.save, 'sparse.onnx'))
     print('########################')
     print('**** sparse stats ****')
-    test()
-    #print(model)
+    #test()
     #torch.save(model.state_dict(), os.path.join(args.save, 'pruned.pth.tar'))
     print('**** pruned ****')
     print_model_param_nums(model)
